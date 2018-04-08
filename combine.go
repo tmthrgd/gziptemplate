@@ -13,7 +13,7 @@ import "math/bits"
 //	Mark Adler and Jean-loup Gailly.
 //
 // See the following:
-//	http://www.zlib.net/
+//	https://www.zlib.net/
 //	https://github.com/madler/zlib/blob/master/adler32.c
 //	https://github.com/madler/zlib/blob/master/crc32.c
 //	https://stackoverflow.com/questions/23122312/crc-calculation-of-a-mostly-static-data-stream/23126768#23126768

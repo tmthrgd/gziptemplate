@@ -8,12 +8,12 @@ Simple and fast gzipped template engine for Go.
 Take a look at [quicktemplate](https://github.com/valyala/quicktemplate) if you  need fast yet powerful html template engine.
 
 *Please note that gziptemplate doesn't do any escaping on template values
-unlike [html/template](http://golang.org/pkg/html/template/) do. So values
+unlike [html/template](https://golang.org/pkg/html/template/) do. So values
 must be properly escaped before passing them to gziptemplate.*
 
-gziptemplate is faster than [text/template](http://golang.org/pkg/text/template/),
-[strings.Replace](http://golang.org/pkg/strings/#Replace),
-[strings.Replacer](http://golang.org/pkg/strings/#Replacer)
+gziptemplate is faster than [text/template](https://golang.org/pkg/text/template/),
+[strings.Replace](https://golang.org/pkg/strings/#Replace),
+[strings.Replacer](https://golang.org/pkg/strings/#Replacer)
 and [fmt.Fprintf](https://golang.org/pkg/fmt/#Fprintf) on placeholders' substitution.
 
 Below are benchmark* results comparing gziptemplate performance to text/template,
@@ -44,14 +44,14 @@ BenchmarkGzipTemplateExecuteTagFunc-8            3000000               499 ns/op
 Docs
 ====
 
-See http://godoc.org/github.com/tmthrgd/gziptemplate.
+See https://godoc.org/github.com/tmthrgd/gziptemplate.
 
 
 Usage
 =====
 
 ```go
-	template := "http://{{host}}/?q={{query}}&foo={{bar}}{{bar}}"
+	template := "https://{{host}}/?q={{query}}&foo={{bar}}{{bar}}"
 	t := gziptemplate.New(template, "{{", "}}")
 	s := t.ExecuteString(map[string]interface{}{
 		"host":  "google.com",
@@ -62,7 +62,7 @@ Usage
 	fmt.Printf("%s", s)
 
 	// Output:
-	// http://google.com/?q=hello%3Dworld&foo=foobarfoobar
+	// https://google.com/?q=hello%3Dworld&foo=foobarfoobar
 ```
 
 

@@ -29,7 +29,7 @@ func mustDecompress(b []byte) []byte {
 }
 
 func ExampleTemplate() {
-	template := "http://{{host}}/?foo={{bar}}{{bar}}&q={{query}}&baz={{baz}}"
+	template := "https://{{host}}/?foo={{bar}}{{bar}}&q={{query}}&baz={{baz}}"
 	t := New(template, "{{", "}}", BestCompression)
 
 	// Substitution map.
@@ -51,7 +51,7 @@ func ExampleTemplate() {
 	fmt.Printf("%s", s)
 
 	// Output:
-	// http://google.com/?foo=foobarfoobar&q=query%3Dworld&baz=
+	// https://google.com/?foo=foobarfoobar&q=query%3Dworld&baz=
 }
 
 func ExampleTagFunc() {
