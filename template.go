@@ -115,12 +115,8 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 		return &t, nil
 	}
 
-	if tagsCount+1 > cap(t.texts) {
-		t.texts = make([]segment, 0, tagsCount+1)
-	}
-	if tagsCount > cap(t.tags) {
-		t.tags = make([]string, 0, tagsCount)
-	}
+	t.texts = make([]segment, 0, tagsCount+1)
+	t.tags = make([]string, 0, tagsCount)
 
 	fw, err := flate.NewWriter(nil, level)
 	if err != nil {
