@@ -23,15 +23,15 @@ strings.Replace, strings.Replacer and fmt.Fprintf:
 ```
 $ go test -bench=. -benchmem
 PASS
-BenchmarkFmtFprintf-4                   	 2000000	       790 ns/op	       0 B/op	       0 allocs/op
-BenchmarkStringsReplace-4               	  500000	      3474 ns/op	    2112 B/op	      14 allocs/op
-BenchmarkStringsReplacer-4              	  500000	      2657 ns/op	    2256 B/op	      23 allocs/op
-BenchmarkTextTemplate-4                 	  500000	      3333 ns/op	     336 B/op	      19 allocs/op
-BenchmarkFastTemplateExecuteFunc-4      	 5000000	       349 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFastTemplateExecute-4          	 3000000	       383 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFastTemplateExecuteFuncString-4	 3000000	       549 ns/op	     144 B/op	       1 allocs/op
-BenchmarkFastTemplateExecuteString-4    	 3000000	       572 ns/op	     144 B/op	       1 allocs/op
-BenchmarkFastTemplateExecuteTagFunc-4   	 2000000	       743 ns/op	     144 B/op	       3 allocs/op
+BenchmarkFmtFprintf-8                           10000000               215 ns/op               0 B/op          0 allocs/op
+BenchmarkStringsReplace-8                        2000000               791 ns/op            1952 B/op         14 allocs/op
+BenchmarkStringsReplacer-8                       2000000               892 ns/op            2256 B/op         23 allocs/op
+BenchmarkTextTemplate-8                          1000000              1111 ns/op             336 B/op         19 allocs/op
+BenchmarkFastTemplateExecuteFunc-8              20000000                93.5 ns/op             0 B/op          0 allocs/op
+BenchmarkFastTemplateExecute-8                  10000000               122 ns/op              16 B/op          1 allocs/op
+BenchmarkFastTemplateExecuteFuncString-8        10000000               174 ns/op             176 B/op          2 allocs/op
+BenchmarkFastTemplateExecuteString-8            10000000               181 ns/op             176 B/op          2 allocs/op
+BenchmarkFastTemplateExecuteTagFunc-8            5000000               262 ns/op             160 B/op          4 allocs/op
 ```
 
 
