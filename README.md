@@ -1,23 +1,20 @@
-fasttemplate
+gziptemplate
 ============
 
-Simple and fast template engine for Go.
-
-Fasttemplate peforms only a single task - it substitutes template placeholders
-with user-defined values. At high speed :)
+Simple and fast gzipped template engine for Go.
 
 Take a look at [quicktemplate](https://github.com/valyala/quicktemplate) if you  need fast yet powerful html template engine.
 
-*Please note that fasttemplate doesn't do any escaping on template values
+*Please note that gziptemplate doesn't do any escaping on template values
 unlike [html/template](http://golang.org/pkg/html/template/) do. So values
-must be properly escaped before passing them to fasttemplate.*
+must be properly escaped before passing them to gziptemplate.*
 
-Fasttemplate is faster than [text/template](http://golang.org/pkg/text/template/),
+gziptemplate is faster than [text/template](http://golang.org/pkg/text/template/),
 [strings.Replace](http://golang.org/pkg/strings/#Replace),
 [strings.Replacer](http://golang.org/pkg/strings/#Replacer)
 and [fmt.Fprintf](https://golang.org/pkg/fmt/#Fprintf) on placeholders' substitution.
 
-Below are benchmark results comparing fasttemplate performance to text/template,
+Below are benchmark* results comparing gziptemplate performance to text/template,
 strings.Replace, strings.Replacer and fmt.Fprintf:
 
 ```
@@ -34,11 +31,13 @@ BenchmarkFastTemplateExecuteString-8            10000000               181 ns/op
 BenchmarkFastTemplateExecuteTagFunc-8            5000000               262 ns/op             160 B/op          4 allocs/op
 ```
 
+*Benchmarks do not yet cover gzip compression.
+
 
 Docs
 ====
 
-See http://godoc.org/github.com/tmthrgd/fasttemplate.
+See http://godoc.org/github.com/tmthrgd/gziptemplate.
 
 
 Usage
@@ -46,12 +45,13 @@ Usage
 
 ```go
 	template := "http://{{host}}/?q={{query}}&foo={{bar}}{{bar}}"
-	t := fasttemplate.New(template, "{{", "}}")
+	t := gziptemplate.New(template, "{{", "}}")
 	s := t.ExecuteString(map[string]interface{}{
 		"host":  "google.com",
 		"query": url.QueryEscape("hello=world"),
 		"bar":   "foobar",
 	})
+	s = mustDecompress(s)
 	fmt.Printf("%s", s)
 
 	// Output:
@@ -64,7 +64,7 @@ Advanced usage
 
 ```go
 	template := "Hello, [user]! You won [prize]!!! [foobar]"
-	t, err := fasttemplate.NewTemplate(template, "[", "]")
+	t, err := gziptemplate.NewTemplate(template, "[", "]")
 	if err != nil {
 		log.Fatalf("unexpected error when parsing template: %s", err)
 	}
@@ -78,6 +78,7 @@ Advanced usage
 			return w.Write([]byte(fmt.Sprintf("[unknown tag %q]", tag)))
 		}
 	})
+	s = mustDecompress(s)
 	fmt.Printf("%s", s)
 
 	// Output:

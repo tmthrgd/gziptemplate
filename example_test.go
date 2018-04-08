@@ -1,4 +1,4 @@
-package fasttemplate
+package gziptemplate
 
 import (
 	"compress/gzip"

@@ -1,10 +1,12 @@
-// Package fasttemplate implements simple and fast template library.
+// Package gziptemplate implements simple and fast gzipped template library.
 //
-// Fasttemplate is faster than text/template, strings.Replace
+// gziptemplate is faster than text/template, strings.Replace
 // and strings.Replacer.
 //
-// Fasttemplate ideally fits for fast and simple placeholders' substitutions.
-package fasttemplate
+// gziptemplate ideally fits for fast and simple placeholders' substitutions.
+//
+// Unlike other solutions, gziptemplate compresses templates once ahead of time.
+package gziptemplate
 
 import (
 	"bytes"
