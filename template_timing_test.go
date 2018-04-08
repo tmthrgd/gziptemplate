@@ -251,16 +251,6 @@ func BenchmarkTemplateResetExecuteFunc(b *testing.B) {
 	})
 }
 
-func BenchmarkExecuteFunc(b *testing.B) {
-	b.RunParallel(func(pb *testing.PB) {
-		var bb bytes.Buffer
-		for pb.Next() {
-			ExecuteFunc(source, "{{", "}}", &bb, testTagFunc)
-			bb.Reset()
-		}
-	})
-}
-
 func testTagFunc(w io.Writer, tag string) (int, error) {
 	return w.Write(m[tag].([]byte))
 }
