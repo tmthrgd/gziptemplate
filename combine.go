@@ -4,6 +4,8 @@
 
 package gziptemplate
 
+import "math/bits"
+
 // The origin of the CombineAdler32, CombineCRC32, and CombineCRC64 functions
 // in this package is the adler32_combine, crc32_combine, gf2_matrix_times,
 // and gf2_matrix_square functions found in the zlib library and was translated
@@ -42,11 +44,11 @@ package gziptemplate
 // Translation of gf2_matrix_times from zlib.
 func matrixMult(mat *[32]uint32, vec uint32) uint32 {
 	var sum uint32
-	for n := 0; n < 32 && vec > 0; n++ {
-		if vec&1 > 0 {
-			sum ^= mat[n]
-		}
-		vec >>= 1
+	for n := 0; vec != 0; {
+		nz := bits.TrailingZeros32(vec)
+		n += nz + 1
+		sum ^= mat[n-1]
+		vec >>= uint(nz) + 1
 	}
 	return sum
 }
