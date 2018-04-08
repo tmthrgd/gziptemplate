@@ -9,11 +9,9 @@ package fasttemplate
 import (
 	"bytes"
 	"fmt"
-	"github.com/valyala/bytebufferpool"
 	"io"
+	"strings"
 )
-
-var byteBufferPool bytebufferpool.Pool
 
 // Template implements simple template engine, which can be used for fast
 // tags' (aka placeholders) substitution.
@@ -22,9 +20,8 @@ type Template struct {
 	startTag string
 	endTag   string
 
-	texts          [][]byte
-	tags           []string
-	byteBufferPool bytebufferpool.Pool
+	texts [][]byte
+	tags  []string
 }
 
 // New parses the given template using the given startTag and endTag
@@ -178,14 +175,11 @@ func (t *Template) Execute(w io.Writer, m map[string]interface{}) (int64, error)
 // This function is optimized for frozen templates.
 // Use ExecuteFuncString for constantly changing templates.
 func (t *Template) ExecuteFuncString(f TagFunc) string {
-	bb := t.byteBufferPool.Get()
-	if _, err := t.ExecuteFunc(bb, f); err != nil {
+	var sb strings.Builder
+	if _, err := t.ExecuteFunc(&sb, f); err != nil {
 		panic(fmt.Sprintf("unexpected error: %s", err))
 	}
-	s := string(bb.Bytes())
-	bb.Reset()
-	t.byteBufferPool.Put(bb)
-	return s
+	return sb.String()
 }
 
 // ExecuteString substitutes template tags (placeholders) with the corresponding
