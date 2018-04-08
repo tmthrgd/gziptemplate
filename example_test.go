@@ -1,15 +1,33 @@
 package fasttemplate
 
 import (
+	"compress/flate"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/url"
+	"strings"
 )
+
+func mustDecompress(s string) string {
+	r := flate.NewReader(strings.NewReader(s))
+
+	res, err := ioutil.ReadAll(r)
+	if err != nil {
+		panic(fmt.Sprintf("flate decompression failed: %v", err))
+	}
+
+	if err := r.Close(); err != nil {
+		panic(fmt.Sprintf("flate decompression failed: %v", err))
+	}
+
+	return string(res)
+}
 
 func ExampleTemplate() {
 	template := "http://{{host}}/?foo={{bar}}{{bar}}&q={{query}}&baz={{baz}}"
-	t := New(template, "{{", "}}")
+	t := New(template, "{{", "}}", BestCompression)
 
 	// Substitution map.
 	// Since "baz" tag is missing in the map, it will be substituted
@@ -26,6 +44,7 @@ func ExampleTemplate() {
 	}
 
 	s := t.ExecuteString(m)
+	s = mustDecompress(s)
 	fmt.Printf("%s", s)
 
 	// Output:
@@ -34,7 +53,7 @@ func ExampleTemplate() {
 
 func ExampleTagFunc() {
 	template := "foo[baz]bar"
-	t, err := NewTemplate(template, "[", "]")
+	t, err := NewTemplate(template, "[", "]", BestCompression)
 	if err != nil {
 		log.Fatalf("unexpected error when parsing template: %s", err)
 	}
@@ -58,6 +77,7 @@ func ExampleTagFunc() {
 	}
 
 	s := t.ExecuteString(m)
+	s = mustDecompress(s)
 	fmt.Printf("%s", s)
 
 	// Output:
@@ -66,7 +86,7 @@ func ExampleTagFunc() {
 
 func ExampleTemplate_ExecuteFuncString() {
 	template := "Hello, [user]! You won [prize]!!! [foobar]"
-	t, err := NewTemplate(template, "[", "]")
+	t, err := NewTemplate(template, "[", "]", BestCompression)
 	if err != nil {
 		log.Fatalf("unexpected error when parsing template: %s", err)
 	}
@@ -80,6 +100,7 @@ func ExampleTemplate_ExecuteFuncString() {
 			return w.Write([]byte(fmt.Sprintf("[unknown tag %q]", tag)))
 		}
 	})
+	s = mustDecompress(s)
 	fmt.Printf("%s", s)
 
 	// Output:

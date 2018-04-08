@@ -114,7 +114,7 @@ func BenchmarkTextTemplate(b *testing.B) {
 }
 
 func BenchmarkFastTemplateExecuteFunc(b *testing.B) {
-	t, err := NewTemplate(source, "{{", "}}")
+	t, err := NewTemplate(source, "{{", "}}", BestCompression)
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
@@ -136,7 +136,7 @@ func BenchmarkFastTemplateExecuteFunc(b *testing.B) {
 }
 
 func BenchmarkFastTemplateExecute(b *testing.B) {
-	t, err := NewTemplate(source, "{{", "}}")
+	t, err := NewTemplate(source, "{{", "}}", BestCompression)
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
@@ -158,7 +158,7 @@ func BenchmarkFastTemplateExecute(b *testing.B) {
 }
 
 func BenchmarkFastTemplateExecuteFuncString(b *testing.B) {
-	t, err := NewTemplate(source, "{{", "}}")
+	t, err := NewTemplate(source, "{{", "}}", BestCompression)
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
@@ -175,7 +175,7 @@ func BenchmarkFastTemplateExecuteFuncString(b *testing.B) {
 }
 
 func BenchmarkFastTemplateExecuteString(b *testing.B) {
-	t, err := NewTemplate(source, "{{", "}}")
+	t, err := NewTemplate(source, "{{", "}}", BestCompression)
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
@@ -192,7 +192,7 @@ func BenchmarkFastTemplateExecuteString(b *testing.B) {
 }
 
 func BenchmarkFastTemplateExecuteTagFunc(b *testing.B) {
-	t, err := NewTemplate(source, "{{", "}}")
+	t, err := NewTemplate(source, "{{", "}}", BestCompression)
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
@@ -225,26 +225,26 @@ func BenchmarkFastTemplateExecuteTagFunc(b *testing.B) {
 func BenchmarkNewTemplate(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_ = New(source, "{{", "}}")
+			_ = New(source, "{{", "}}", BestCompression)
 		}
 	})
 }
 
 func BenchmarkTemplateReset(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
-		t := New(source, "{{", "}}")
+		t := New(source, "{{", "}}", BestCompression)
 		for pb.Next() {
-			t.Reset(source, "{{", "}}")
+			t.Reset(source, "{{", "}}", BestCompression)
 		}
 	})
 }
 
 func BenchmarkTemplateResetExecuteFunc(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
-		t := New(source, "{{", "}}")
+		t := New(source, "{{", "}}", BestCompression)
 		var w bytes.Buffer
 		for pb.Next() {
-			t.Reset(source, "{{", "}}")
+			t.Reset(source, "{{", "}}", BestCompression)
 			t.ExecuteFunc(&w, testTagFunc)
 			w.Reset()
 		}
