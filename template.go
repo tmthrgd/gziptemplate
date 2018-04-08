@@ -19,6 +19,9 @@ import (
 	"github.com/dsnet/golib/hashmerge"
 )
 
+// zero-length type 0 block
+var syncFlushFooter = []byte{0x00, 0x00, 0x00, 0xff, 0xff}
+
 // These constants are copied from the flate package, so that code that imports
 // this package does not also have to import "compress/flate".
 const (
@@ -178,7 +181,7 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 
 		t.size += uint32(ni)
 		t.texts = append(t.texts, segment{
-			bytes: buf.Bytes(),
+			bytes: bytes.TrimSuffix(buf.Bytes(), syncFlushFooter),
 			size:  ni,
 			crc:   crc32.ChecksumIEEE(si),
 		})
@@ -238,10 +241,20 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 			zw.crc = hashmerge.CombineCRC32(crc32.IEEE, zw.crc, ti.crc, int64(ti.size))
 		}
 
+		zw.wrote = false
+
 		ni, err = f(zw, t.tags[i])
 		nn += int64(ni)
 		if err != nil {
 			return nn, err
+		}
+
+		if !zw.wrote {
+			ni, err := w.Write(syncFlushFooter)
+			nn += int64(ni)
+			if err != nil {
+				return nn, err
+			}
 		}
 	}
 
@@ -324,9 +337,13 @@ type typeZeroWriter struct {
 	crc  uint32
 
 	hdrBuf [5]byte
+
+	wrote bool
 }
 
 func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
+	w.wrote = true
+
 	const maxLength = ^uint16(0)
 	for len(p) > int(maxLength) {
 		ni, err := w.Write(p[:maxLength])
