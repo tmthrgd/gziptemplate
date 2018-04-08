@@ -336,9 +336,6 @@ func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
 		}
 
 		p = p[maxLength:]
-		if len(p) == 0 {
-			return n, nil
-		}
 	}
 
 	w.size += uint32(len(p))
