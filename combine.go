@@ -59,7 +59,7 @@ func matrixSquare(square, mat *[32]uint32) {
 }
 
 type crc32Matrix struct {
-	odd [32]uint32
+	even [32]uint32
 }
 
 func precomputeCRC32(poly uint32) *crc32Matrix {
@@ -80,7 +80,10 @@ func precomputeCRC32(poly uint32) *crc32Matrix {
 	// Put operator for four zero bits in odd.
 	matrixSquare(&odd, &even)
 
-	return &crc32Matrix{odd}
+	// Put operator for eight zero bits in even.
+	matrixSquare(&even, &odd)
+
+	return &crc32Matrix{even}
 }
 
 // combineCRC32 combines two CRC-32 checksums together.
@@ -94,14 +97,12 @@ func combineCRC32(mat *crc32Matrix, crc1, crc2 uint32, len2 int64) uint32 {
 		panic("hashmerge: negative length")
 	}
 
-	var even [32]uint32
-	odd := mat.odd
+	even := mat.even
+	var odd [32]uint32
 
-	// Apply len2 zeros to crc1 (first square will put the operator for one
-	// zero byte, eight zero bits, in even).
+	// Apply len2 zeros to crc1.
 	for {
 		// Apply zeros operator for this bit of len2.
-		matrixSquare(&even, &odd)
 		if len2&1 > 0 {
 			crc1 = matrixMult(&even, crc1)
 		}
@@ -119,6 +120,8 @@ func combineCRC32(mat *crc32Matrix, crc1, crc2 uint32, len2 int64) uint32 {
 		if len2 == 0 {
 			break
 		}
+
+		matrixSquare(&even, &odd)
 	}
 	return crc1 ^ crc2
 }
