@@ -120,9 +120,6 @@ func (t *Template) Reset(template, startTag, endTag string) error {
 // ExecuteFunc calls f on each template tag (placeholder) occurrence.
 //
 // Returns the number of bytes written to w.
-//
-// This function is optimized for frozen templates.
-// Use ExecuteFunc for constantly changing templates.
 func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 	var nn int64
 
@@ -167,9 +164,6 @@ func (t *Template) Execute(w io.Writer, m map[string]interface{}) (int64, error)
 // and substitutes it with the data written to TagFunc's w.
 //
 // Returns the resulting string.
-//
-// This function is optimized for frozen templates.
-// Use ExecuteFuncString for constantly changing templates.
 func (t *Template) ExecuteFuncString(f TagFunc) string {
 	var sb strings.Builder
 	sb.Grow(len(t.template))
@@ -186,9 +180,6 @@ func (t *Template) ExecuteFuncString(f TagFunc) string {
 //   * []byte - the fastest value type
 //   * string - convenient value type
 //   * TagFunc - flexible value type
-//
-// This function is optimized for frozen templates.
-// Use ExecuteString for constantly changing templates.
 func (t *Template) ExecuteString(m map[string]interface{}) string {
 	return t.ExecuteFuncString(func(w io.Writer, tag string) (int, error) { return stdTagFunc(w, tag, m) })
 }
