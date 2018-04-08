@@ -176,6 +176,7 @@ func (t *Template) Execute(w io.Writer, m map[string]interface{}) (int64, error)
 // Use ExecuteFuncString for constantly changing templates.
 func (t *Template) ExecuteFuncString(f TagFunc) string {
 	var sb strings.Builder
+	sb.Grow(len(t.template))
 	if _, err := t.ExecuteFunc(&sb, f); err != nil {
 		panic(fmt.Sprintf("unexpected error: %s", err))
 	}
