@@ -20,15 +20,20 @@ strings.Replace, strings.Replacer and fmt.Fprintf:
 ```
 $ go test -bench=. -benchmem
 PASS
-BenchmarkFmtFprintf-8                           10000000               215 ns/op               0 B/op          0 allocs/op
-BenchmarkStringsReplace-8                        2000000               791 ns/op            1952 B/op         14 allocs/op
-BenchmarkStringsReplacer-8                       2000000               892 ns/op            2256 B/op         23 allocs/op
-BenchmarkTextTemplate-8                          1000000              1111 ns/op             336 B/op         19 allocs/op
-BenchmarkFastTemplateExecuteFunc-8              20000000                93.5 ns/op             0 B/op          0 allocs/op
-BenchmarkFastTemplateExecute-8                  10000000               122 ns/op              16 B/op          1 allocs/op
-BenchmarkFastTemplateExecuteFuncString-8        10000000               174 ns/op             176 B/op          2 allocs/op
-BenchmarkFastTemplateExecuteString-8            10000000               181 ns/op             176 B/op          2 allocs/op
-BenchmarkFastTemplateExecuteTagFunc-8            5000000               262 ns/op             160 B/op          4 allocs/op
+BenchmarkFmtFprintf-8                           10000000               195 ns/op               0 B/op          0 allocs/op
+BenchmarkStringsReplace-8                        3000000               717 ns/op            2080 B/op         14 allocs/op
+BenchmarkStringsReplacer-8                       1000000              1010 ns/op            2256 B/op         23 allocs/op
+BenchmarkTextTemplate-8                          2000000              1010 ns/op             336 B/op         19 allocs/op
+BenchmarkFastTemplateExecuteFunc-8              20000000                86.9 ns/op             0 B/op          0 allocs/op
+BenchmarkFastTemplateExecute-8                  20000000               103 ns/op              16 B/op          1 allocs/op
+BenchmarkFastTemplateExecuteFuncString-8        10000000               130 ns/op             176 B/op          2 allocs/op
+BenchmarkFastTemplateExecuteString-8            10000000               153 ns/op             176 B/op          2 allocs/op
+BenchmarkFastTemplateExecuteTagFunc-8            5000000               224 ns/op             160 B/op          4 allocs/op
+BenchmarkGzipTemplateExecuteFunc-8               5000000               348 ns/op              40 B/op          2 allocs/op
+BenchmarkGzipTemplateExecute-8                   5000000               381 ns/op              56 B/op          3 allocs/op
+BenchmarkGzipTemplateExecuteFuncString-8         3000000               491 ns/op             568 B/op          8 allocs/op
+BenchmarkGzipTemplateExecuteString-8             3000000               492 ns/op             568 B/op          8 allocs/op
+BenchmarkGzipTemplateExecuteTagFunc-8            3000000               499 ns/op             200 B/op          6 allocs/op
 ```
 
 *Benchmarks do not yet cover gzip compression.
