@@ -280,47 +280,47 @@ func BenchmarkGzipTemplateExecute(b *testing.B) {
 	})
 }
 
-func BenchmarkGzipTemplateExecuteFuncString(b *testing.B) {
+func BenchmarkGzipTemplateExecuteFuncBytes(b *testing.B) {
 	t, err := NewTemplate(source, "{{", "}}", BestCompression)
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
 
-	var w strings.Builder
+	var w bytes.Buffer
 	if _, err := t.ExecuteFunc(&w, testTagFunc); err != nil {
 		b.Fatalf("unexpected error: %s", err)
 	}
-	result := w.String()
+	resultBytes := w.Bytes()
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			x := t.ExecuteFuncString(testTagFunc)
-			if x != result {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, result)
+			x := t.ExecuteFuncBytes(testTagFunc)
+			if !bytes.Equal(x, resultBytes) {
+				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
 			}
 		}
 	})
 }
 
-func BenchmarkGzipTemplateExecuteString(b *testing.B) {
+func BenchmarkGzipTemplateExecuteBytes(b *testing.B) {
 	t, err := NewTemplate(source, "{{", "}}", BestCompression)
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
 
-	var w strings.Builder
+	var w bytes.Buffer
 	if _, err := t.Execute(&w, m); err != nil {
 		b.Fatalf("unexpected error: %s", err)
 	}
-	result := w.String()
+	resultBytes := w.Bytes()
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			x := t.ExecuteString(m)
-			if x != result {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, result)
+			x := t.ExecuteBytes(m)
+			if !bytes.Equal(x, resultBytes) {
+				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
 			}
 		}
 	})

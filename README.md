@@ -31,8 +31,8 @@ BenchmarkFastTemplateExecuteString-8            10000000               153 ns/op
 BenchmarkFastTemplateExecuteTagFunc-8            5000000               224 ns/op             160 B/op          4 allocs/op
 BenchmarkGzipTemplateExecuteFunc-8               5000000               348 ns/op              40 B/op          2 allocs/op
 BenchmarkGzipTemplateExecute-8                   5000000               381 ns/op              56 B/op          3 allocs/op
-BenchmarkGzipTemplateExecuteFuncString-8         3000000               491 ns/op             568 B/op          8 allocs/op
-BenchmarkGzipTemplateExecuteString-8             3000000               492 ns/op             568 B/op          8 allocs/op
+BenchmarkGzipTemplateExecuteFuncBytes-8          3000000               496 ns/op             584 B/op          5 allocs/op
+BenchmarkGzipTemplateExecuteBytes-8              3000000               487 ns/op             584 B/op          5 allocs/op
 BenchmarkGzipTemplateExecuteTagFunc-8            3000000               499 ns/op             200 B/op          6 allocs/op
 ```
 

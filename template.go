@@ -291,28 +291,28 @@ func (t *Template) Execute(w io.Writer, m map[string]interface{}) (int64, error)
 	return t.ExecuteFunc(w, func(w io.Writer, tag string) (int, error) { return stdTagFunc(w, tag, m) })
 }
 
-// ExecuteFuncString calls f on each template tag (placeholder) occurrence
+// ExecuteFuncBytes calls f on each template tag (placeholder) occurrence
 // and substitutes it with the data written to TagFunc's w.
 //
-// Returns the resulting string.
-func (t *Template) ExecuteFuncString(f TagFunc) string {
-	var sb strings.Builder
-	sb.Grow(len(t.template))
-	if _, err := t.ExecuteFunc(&sb, f); err != nil {
+// Returns the resulting byte slice.
+func (t *Template) ExecuteFuncBytes(f TagFunc) []byte {
+	var buf bytes.Buffer
+	buf.Grow(len(t.template))
+	if _, err := t.ExecuteFunc(&buf, f); err != nil {
 		panic(fmt.Sprintf("unexpected error: %s", err))
 	}
-	return sb.String()
+	return buf.Bytes()
 }
 
-// ExecuteString substitutes template tags (placeholders) with the corresponding
+// ExecuteBytes substitutes template tags (placeholders) with the corresponding
 // values from the map m and returns the result.
 //
 // Substitution map m may contain values with the following types:
 //   * []byte - the fastest value type
 //   * string - convenient value type
 //   * TagFunc - flexible value type
-func (t *Template) ExecuteString(m map[string]interface{}) string {
-	return t.ExecuteFuncString(func(w io.Writer, tag string) (int, error) { return stdTagFunc(w, tag, m) })
+func (t *Template) ExecuteBytes(m map[string]interface{}) []byte {
+	return t.ExecuteFuncBytes(func(w io.Writer, tag string) (int, error) { return stdTagFunc(w, tag, m) })
 }
 
 func stdTagFunc(w io.Writer, tag string, m map[string]interface{}) (int, error) {

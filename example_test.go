@@ -1,17 +1,17 @@
 package gziptemplate
 
 import (
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/url"
-	"strings"
 )
 
-func mustDecompress(s string) string {
-	r, err := gzip.NewReader(strings.NewReader(s))
+func mustDecompress(b []byte) []byte {
+	r, err := gzip.NewReader(bytes.NewReader(b))
 	if err != nil {
 		panic(fmt.Sprintf("gzip decompression failed: %v", err))
 	}
@@ -25,7 +25,7 @@ func mustDecompress(s string) string {
 		panic(fmt.Sprintf("gzip decompression failed: %v", err))
 	}
 
-	return string(res)
+	return res
 }
 
 func ExampleTemplate() {
@@ -46,7 +46,7 @@ func ExampleTemplate() {
 		}),
 	}
 
-	s := t.ExecuteString(m)
+	s := t.ExecuteBytes(m)
 	s = mustDecompress(s)
 	fmt.Printf("%s", s)
 
@@ -79,7 +79,7 @@ func ExampleTagFunc() {
 		}),
 	}
 
-	s := t.ExecuteString(m)
+	s := t.ExecuteBytes(m)
 	s = mustDecompress(s)
 	fmt.Printf("%s", s)
 
@@ -87,13 +87,13 @@ func ExampleTagFunc() {
 	// foo123456789bar
 }
 
-func ExampleTemplate_ExecuteFuncString() {
+func ExampleTemplate_ExecuteFuncBytes() {
 	template := "Hello, [user]! You won [prize]!!! [foobar]"
 	t, err := NewTemplate(template, "[", "]", BestCompression)
 	if err != nil {
 		log.Fatalf("unexpected error when parsing template: %s", err)
 	}
-	s := t.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+	s := t.ExecuteFuncBytes(func(w io.Writer, tag string) (int, error) {
 		switch tag {
 		case "user":
 			return w.Write([]byte("John"))
