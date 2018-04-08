@@ -127,6 +127,7 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 		return nil, err
 	}
 
+	s := []byte(template)
 	st := template
 
 	for {
@@ -139,8 +140,7 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 			ni = len(st)
 		}
 
-		si := []byte(st[:ni])
-		if _, err := fw.Write(si); err != nil {
+		if _, err := fw.Write(s[:ni]); err != nil {
 			return nil, err
 		}
 
@@ -158,12 +158,13 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 		t.texts = append(t.texts, segment{
 			bytes: bytes.TrimSuffix(buf.Bytes(), syncFlushFooter),
 			size:  ni,
-			crc:   crc32.ChecksumIEEE(si),
+			crc:   crc32.ChecksumIEEE(s[:ni]),
 		})
 		if n < 0 {
 			break
 		}
 
+		s = s[n+len(startTag):]
 		st = st[n+len(startTag):]
 
 		n = strings.Index(st, endTag)
@@ -173,6 +174,7 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 
 		t.tags = append(t.tags, st[:n])
 
+		s = s[n+len(endTag):]
 		st = st[n+len(endTag):]
 	}
 
