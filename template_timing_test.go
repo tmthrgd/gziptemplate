@@ -1,9 +1,10 @@
 package gziptemplate
 
 import (
-	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/url"
 	"strings"
 	"testing"
@@ -41,48 +42,13 @@ func map2slice(m map[string]interface{}) []string {
 
 func BenchmarkFmtFprintf(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
-		var w bytes.Buffer
+		gw, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
 		for pb.Next() {
-			fmt.Fprintf(&w,
+			gw.Reset(ioutil.Discard)
+			fmt.Fprintf(gw,
 				"https://%[5]s.foo.bar.com/?cb=%[1]s%[2]s&width=%[2]s&height=%[3]s&timeout=%[4]s&uid=%[5]s&subid=%[6]s&ref=%[7]s",
 				m["cb"], m["width"], m["height"], m["timeout"], m["uid"], m["subid"], m["ref"])
-			x := w.Bytes()
-			if !bytes.Equal(x, resultBytes) {
-				b.Fatalf("Unexpected result\n%q\nExpected\n%q\n", x, result)
-			}
-			w.Reset()
-		}
-	})
-}
-
-func BenchmarkStringsReplace(b *testing.B) {
-	mSlice := map2slice(m)
-
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			x := source
-			for i := 0; i < len(mSlice); i += 2 {
-				x = strings.Replace(x, mSlice[i], mSlice[i+1], -1)
-			}
-			if x != result {
-				b.Fatalf("Unexpected result\n%q\nExpected\n%q\n", x, result)
-			}
-		}
-	})
-}
-
-func BenchmarkStringsReplacer(b *testing.B) {
-	mSlice := map2slice(m)
-
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			r := strings.NewReplacer(mSlice...)
-			x := r.Replace(source)
-			if x != result {
-				b.Fatalf("Unexpected result\n%q\nExpected\n%q\n", x, result)
-			}
+			gw.Close()
 		}
 	})
 }
@@ -101,16 +67,13 @@ func BenchmarkTextTemplate(b *testing.B) {
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		var w bytes.Buffer
+		gw, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
 		for pb.Next() {
-			if err := t.Execute(&w, mm); err != nil {
+			gw.Reset(ioutil.Discard)
+			if err := t.Execute(gw, mm); err != nil {
 				b.Fatalf("error when executing template: %s", err)
 			}
-			x := w.Bytes()
-			if !bytes.Equal(x, resultBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
-			}
-			w.Reset()
+			gw.Close()
 		}
 	})
 }
@@ -123,16 +86,13 @@ func BenchmarkFastTemplateExecuteFunc(b *testing.B) {
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		var w bytes.Buffer
+		gw, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
 		for pb.Next() {
-			if _, err := t.ExecuteFunc(&w, testTagFunc); err != nil {
+			gw.Reset(ioutil.Discard)
+			if _, err := t.ExecuteFunc(gw, testTagFunc); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
-			x := w.Bytes()
-			if !bytes.Equal(x, resultBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
-			}
-			w.Reset()
+			gw.Close()
 		}
 	})
 }
@@ -145,50 +105,13 @@ func BenchmarkFastTemplateExecute(b *testing.B) {
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		var w bytes.Buffer
+		gw, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
 		for pb.Next() {
-			if _, err := t.Execute(&w, m); err != nil {
+			gw.Reset(ioutil.Discard)
+			if _, err := t.Execute(gw, m); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
-			x := w.Bytes()
-			if !bytes.Equal(x, resultBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
-			}
-			w.Reset()
-		}
-	})
-}
-
-func BenchmarkFastTemplateExecuteFuncString(b *testing.B) {
-	t, err := fasttemplate.NewTemplate(source, "{{", "}}")
-	if err != nil {
-		b.Fatalf("error in template: %s", err)
-	}
-
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			x := t.ExecuteFuncString(testTagFunc)
-			if x != result {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, result)
-			}
-		}
-	})
-}
-
-func BenchmarkFastTemplateExecuteString(b *testing.B) {
-	t, err := fasttemplate.NewTemplate(source, "{{", "}}")
-	if err != nil {
-		b.Fatalf("error in template: %s", err)
-	}
-
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			x := t.ExecuteString(m)
-			if x != result {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, result)
-			}
+			gw.Close()
 		}
 	})
 }
@@ -210,16 +133,13 @@ func BenchmarkFastTemplateExecuteTagFunc(b *testing.B) {
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		var w bytes.Buffer
+		gw, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
 		for pb.Next() {
-			if _, err := t.Execute(&w, mm); err != nil {
+			gw.Reset(ioutil.Discard)
+			if _, err := t.Execute(gw, mm); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
-			x := w.Bytes()
-			if !bytes.Equal(x, resultEscapedBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultEscapedBytes)
-			}
-			w.Reset()
+			gw.Close()
 		}
 	})
 }
@@ -230,24 +150,12 @@ func BenchmarkGzipTemplateExecuteFunc(b *testing.B) {
 		b.Fatalf("error in template: %s", err)
 	}
 
-	var w bytes.Buffer
-	if _, err := t.ExecuteFunc(&w, testTagFunc); err != nil {
-		b.Fatalf("unexpected error: %s", err)
-	}
-	resultBytes := w.Bytes()
-
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		var w bytes.Buffer
 		for pb.Next() {
-			if _, err := t.ExecuteFunc(&w, testTagFunc); err != nil {
+			if _, err := t.ExecuteFunc(ioutil.Discard, testTagFunc); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
-			x := w.Bytes()
-			if !bytes.Equal(x, resultBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
-			}
-			w.Reset()
 		}
 	})
 }
@@ -258,24 +166,12 @@ func BenchmarkGzipTemplateExecute(b *testing.B) {
 		b.Fatalf("error in template: %s", err)
 	}
 
-	var w bytes.Buffer
-	if _, err := t.Execute(&w, m); err != nil {
-		b.Fatalf("unexpected error: %s", err)
-	}
-	resultBytes := w.Bytes()
-
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		var w bytes.Buffer
 		for pb.Next() {
-			if _, err := t.Execute(&w, m); err != nil {
+			if _, err := t.Execute(ioutil.Discard, m); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
-			x := w.Bytes()
-			if !bytes.Equal(x, resultBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
-			}
-			w.Reset()
 		}
 	})
 }
@@ -286,19 +182,10 @@ func BenchmarkGzipTemplateExecuteFuncBytes(b *testing.B) {
 		b.Fatalf("error in template: %s", err)
 	}
 
-	var w bytes.Buffer
-	if _, err := t.ExecuteFunc(&w, testTagFunc); err != nil {
-		b.Fatalf("unexpected error: %s", err)
-	}
-	resultBytes := w.Bytes()
-
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			x := t.ExecuteFuncBytes(testTagFunc)
-			if !bytes.Equal(x, resultBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
-			}
+			t.ExecuteFuncBytes(testTagFunc)
 		}
 	})
 }
@@ -309,19 +196,10 @@ func BenchmarkGzipTemplateExecuteBytes(b *testing.B) {
 		b.Fatalf("error in template: %s", err)
 	}
 
-	var w bytes.Buffer
-	if _, err := t.Execute(&w, m); err != nil {
-		b.Fatalf("unexpected error: %s", err)
-	}
-	resultBytes := w.Bytes()
-
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			x := t.ExecuteBytes(m)
-			if !bytes.Equal(x, resultBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultBytes)
-			}
+			t.ExecuteBytes(m)
 		}
 	})
 }
@@ -341,24 +219,12 @@ func BenchmarkGzipTemplateExecuteTagFunc(b *testing.B) {
 		mm[k] = v
 	}
 
-	var w bytes.Buffer
-	if _, err := t.Execute(&w, mm); err != nil {
-		b.Fatalf("unexpected error: %s", err)
-	}
-	resultEscapedBytes := w.Bytes()
-
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		var w bytes.Buffer
 		for pb.Next() {
-			if _, err := t.Execute(&w, mm); err != nil {
+			if _, err := t.Execute(ioutil.Discard, mm); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
-			x := w.Bytes()
-			if !bytes.Equal(x, resultEscapedBytes) {
-				b.Fatalf("unexpected result\n%q\nExpected\n%q\n", x, resultEscapedBytes)
-			}
-			w.Reset()
 		}
 	})
 }
@@ -383,11 +249,9 @@ func BenchmarkTemplateReset(b *testing.B) {
 func BenchmarkTemplateResetExecuteFunc(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		t := New(source, "{{", "}}", BestCompression)
-		var w bytes.Buffer
 		for pb.Next() {
 			t.Reset(source, "{{", "}}", BestCompression)
-			t.ExecuteFunc(&w, testTagFunc)
-			w.Reset()
+			t.ExecuteFunc(ioutil.Discard, testTagFunc)
 		}
 	})
 }
