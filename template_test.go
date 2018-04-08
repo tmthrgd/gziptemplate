@@ -106,33 +106,6 @@ func TestEndWithTag(t *testing.T) {
 	}
 }
 
-func TestTemplateReset(t *testing.T) {
-	template := "foo{bar}baz"
-	tpl := New(template, "{", "}", BestCompression)
-	s := tpl.ExecuteBytes(map[string]interface{}{"bar": "111"})
-	s = decompressBytes(t, s)
-	result := "foo111baz"
-	if string(s) != result {
-		t.Fatalf("unexpected template value %q. Expected %q", s, result)
-	}
-
-	template = "[xxxyyyzz"
-	if err := tpl.Reset(template, "[", "]", BestCompression); err == nil {
-		t.Fatalf("expecting error for unclosed tag on %q", template)
-	}
-
-	template = "[xxx]yyy[zz]"
-	if err := tpl.Reset(template, "[", "]", BestCompression); err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	s = tpl.ExecuteBytes(map[string]interface{}{"xxx": "11", "zz": "2222"})
-	s = decompressBytes(t, s)
-	result = "11yyy2222"
-	if string(s) != result {
-		t.Fatalf("unexpected template value %q. Expected %q", s, result)
-	}
-}
-
 func TestDuplicateTags(t *testing.T) {
 	template := "[foo]bar[foo][foo]baz"
 	tpl := New(template, "[", "]", BestCompression)

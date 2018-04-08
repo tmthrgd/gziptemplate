@@ -71,31 +71,6 @@ func New(template, startTag, endTag string, level int) *Template {
 // using Execute* methods.
 func NewTemplate(template, startTag, endTag string, level int) (*Template, error) {
 	var t Template
-	err := t.Reset(template, startTag, endTag, level)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
-}
-
-// TagFunc can be used as a substitution value in the map passed to Execute*.
-// Execute* functions pass tag (placeholder) name in 'tag' argument.
-//
-// TagFunc must be safe to call from concurrently running goroutines.
-//
-// TagFunc must write contents to w and return the number of bytes written.
-type TagFunc func(w io.Writer, tag string) (int, error)
-
-// Reset resets the template t to new one defined by
-// template, startTag and endTag.
-//
-// Reset allows Template object re-use.
-//
-// Reset may be called only if no other goroutines call t methods at the moment.
-func (t *Template) Reset(template, startTag, endTag string, level int) error {
-	t.texts = t.texts[:0]
-	t.tags = t.tags[:0]
-	t.size = 0
 
 	const (
 		gzipID1     = 0x1f
@@ -125,19 +100,19 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 		var buf bytes.Buffer
 		gw, err := gzip.NewWriterLevel(&buf, level)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if _, err := gw.Write([]byte(template)); err != nil {
-			return err
+			return nil, err
 		}
 
 		if err := gw.Close(); err != nil {
-			return err
+			return nil, err
 		}
 
 		t.template = buf.Bytes()
-		return nil
+		return &t, nil
 	}
 
 	if tagsCount+1 > cap(t.texts) {
@@ -149,7 +124,7 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 
 	fw, err := flate.NewWriter(nil, level)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	st := template
@@ -166,7 +141,7 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 
 		si := []byte(st[:ni])
 		if _, err := fw.Write(si); err != nil {
-			return err
+			return nil, err
 		}
 
 		var err error
@@ -176,7 +151,7 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 			err = fw.Flush()
 		}
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		t.size += uint32(ni)
@@ -193,7 +168,7 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 
 		n = strings.Index(st, endTag)
 		if n < 0 {
-			return fmt.Errorf("Cannot find end tag=%q in the template=%q starting from %q", endTag, template, st)
+			return nil, fmt.Errorf("Cannot find end tag=%q in the template=%q starting from %q", endTag, template, st)
 		}
 
 		t.tags = append(t.tags, st[:n])
@@ -201,8 +176,16 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 		st = st[n+len(endTag):]
 	}
 
-	return nil
+	return &t, nil
 }
+
+// TagFunc can be used as a substitution value in the map passed to Execute*.
+// Execute* functions pass tag (placeholder) name in 'tag' argument.
+//
+// TagFunc must be safe to call from concurrently running goroutines.
+//
+// TagFunc must write contents to w and return the number of bytes written.
+type TagFunc func(w io.Writer, tag string) (int, error)
 
 var crc32Mat = precomputeCRC32(crc32.IEEE)
 
