@@ -119,6 +119,12 @@ func BenchmarkFastTemplateExecuteFunc(b *testing.B) {
 		b.Fatalf("error in template: %s", err)
 	}
 
+	var w bytes.Buffer
+	if _, err := t.ExecuteFunc(&w, testTagFunc); err != nil {
+		b.Fatalf("unexpected error: %s", err)
+	}
+	resultBytes := w.Bytes()
+
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		var w bytes.Buffer
@@ -140,6 +146,12 @@ func BenchmarkFastTemplateExecute(b *testing.B) {
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
+
+	var w bytes.Buffer
+	if _, err := t.Execute(&w, m); err != nil {
+		b.Fatalf("unexpected error: %s", err)
+	}
+	resultBytes := w.Bytes()
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
@@ -163,6 +175,12 @@ func BenchmarkFastTemplateExecuteFuncString(b *testing.B) {
 		b.Fatalf("error in template: %s", err)
 	}
 
+	var w strings.Builder
+	if _, err := t.ExecuteFunc(&w, testTagFunc); err != nil {
+		b.Fatalf("unexpected error: %s", err)
+	}
+	result := w.String()
+
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
@@ -179,6 +197,12 @@ func BenchmarkFastTemplateExecuteString(b *testing.B) {
 	if err != nil {
 		b.Fatalf("error in template: %s", err)
 	}
+
+	var w strings.Builder
+	if _, err := t.Execute(&w, m); err != nil {
+		b.Fatalf("unexpected error: %s", err)
+	}
+	result := w.String()
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
@@ -205,6 +229,12 @@ func BenchmarkFastTemplateExecuteTagFunc(b *testing.B) {
 		}
 		mm[k] = v
 	}
+
+	var w bytes.Buffer
+	if _, err := t.Execute(&w, mm); err != nil {
+		b.Fatalf("unexpected error: %s", err)
+	}
+	resultEscapedBytes := w.Bytes()
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
