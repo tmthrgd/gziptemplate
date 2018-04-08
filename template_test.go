@@ -248,6 +248,21 @@ func TestMixedValues(t *testing.T) {
 	}
 }
 
+func TestLongValue(t *testing.T) {
+	template := "foobar[foo]"
+	tpl := New(template, "[", "]", BestCompression)
+
+	foo := strings.Repeat("a", int(^uint16(0))+16)
+	s := tpl.ExecuteString(map[string]interface{}{
+		"foo": foo,
+	})
+	s = decompressString(t, s)
+	result := "foobar" + foo
+	if s != result {
+		t.Fatal("unexpected template value")
+	}
+}
+
 func expectPanic(t *testing.T, f func()) {
 	defer func() {
 		if r := recover(); r == nil {

@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"compress/flate"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -260,8 +259,18 @@ type typeZeroWriter struct {
 }
 
 func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
-	if len(p) > int(^uint16(0)) {
-		return 0, errors.New("input data too long")
+	const maxLength = ^uint16(0)
+	for len(p) > int(maxLength) {
+		ni, err := w.Write(p[:maxLength])
+		n += ni
+		if err != nil {
+			return n, err
+		}
+
+		p = p[maxLength:]
+		if len(p) == 0 {
+			return n, nil
+		}
 	}
 
 	/* The following code is equivalent to:
@@ -283,5 +292,7 @@ func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
 		return
 	}
 
-	return w.w.Write(p)
+	ni, err := w.w.Write(p)
+	n += ni
+	return n, err
 }
