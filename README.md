@@ -38,7 +38,7 @@ BenchmarkFastTemplateExecuteTagFunc-8            5000000               262 ns/op
 Docs
 ====
 
-See http://godoc.org/github.com/valyala/fasttemplate .
+See http://godoc.org/github.com/tmthrgd/fasttemplate.
 
 
 Usage
