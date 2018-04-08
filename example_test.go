@@ -1,7 +1,7 @@
 package fasttemplate
 
 import (
-	"compress/flate"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,15 +11,18 @@ import (
 )
 
 func mustDecompress(s string) string {
-	r := flate.NewReader(strings.NewReader(s))
+	r, err := gzip.NewReader(strings.NewReader(s))
+	if err != nil {
+		panic(fmt.Sprintf("gzip decompression failed: %v", err))
+	}
 
 	res, err := ioutil.ReadAll(r)
 	if err != nil {
-		panic(fmt.Sprintf("flate decompression failed: %v", err))
+		panic(fmt.Sprintf("gzip decompression failed: %v", err))
 	}
 
 	if err := r.Close(); err != nil {
-		panic(fmt.Sprintf("flate decompression failed: %v", err))
+		panic(fmt.Sprintf("gzip decompression failed: %v", err))
 	}
 
 	return string(res)

@@ -9,10 +9,14 @@ package fasttemplate
 import (
 	"bytes"
 	"compress/flate"
+	"compress/gzip"
 	"encoding/binary"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"strings"
+
+	"github.com/dsnet/golib/hashmerge"
 )
 
 // These constants are copied from the flate package, so that code that imports
@@ -25,12 +29,20 @@ const (
 	HuffmanOnly        = flate.HuffmanOnly
 )
 
+type segment struct {
+	bytes []byte
+	size  int
+	crc   uint32
+}
+
 // Template implements simple template engine, which can be used for fast
 // tags' (aka placeholders) substitution.
 type Template struct {
 	template []byte
-	texts    [][]byte
+	texts    []segment
 	tags     []string
+	size     uint32
+	gzipHdr  [10]byte
 }
 
 // New parses the given template using the given startTag and endTag
@@ -80,6 +92,23 @@ type TagFunc func(w io.Writer, tag string) (int, error)
 func (t *Template) Reset(template, startTag, endTag string, level int) error {
 	t.texts = t.texts[:0]
 	t.tags = t.tags[:0]
+	t.size = 0
+
+	const (
+		gzipID1     = 0x1f
+		gzipID2     = 0x8b
+		gzipDeflate = 8
+	)
+	t.gzipHdr = [10]byte{
+		0: gzipID1, 1: gzipID2, 2: gzipDeflate,
+		9: 255, // unknown OS
+	}
+
+	if level == BestCompression {
+		t.gzipHdr[8] = 2
+	} else if level == BestSpeed {
+		t.gzipHdr[8] = 4
+	}
 
 	if len(startTag) == 0 {
 		panic("startTag cannot be empty")
@@ -91,16 +120,16 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 	tagsCount := strings.Count(template, startTag)
 	if tagsCount == 0 {
 		var buf bytes.Buffer
-		fw, err := flate.NewWriter(&buf, level)
+		gw, err := gzip.NewWriterLevel(&buf, level)
 		if err != nil {
 			return err
 		}
 
-		if _, err := fw.Write([]byte(template)); err != nil {
+		if _, err := gw.Write([]byte(template)); err != nil {
 			return err
 		}
 
-		if err := fw.Close(); err != nil {
+		if err := gw.Close(); err != nil {
 			return err
 		}
 
@@ -109,7 +138,7 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 	}
 
 	if tagsCount+1 > cap(t.texts) {
-		t.texts = make([][]byte, 0, tagsCount+1)
+		t.texts = make([]segment, 0, tagsCount+1)
 	}
 	if tagsCount > cap(t.tags) {
 		t.tags = make([]string, 0, tagsCount)
@@ -132,7 +161,8 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 			ni = len(st)
 		}
 
-		if _, err := fw.Write([]byte(st[:ni])); err != nil {
+		si := []byte(st[:ni])
+		if _, err := fw.Write(si); err != nil {
 			return err
 		}
 
@@ -146,7 +176,12 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 			return err
 		}
 
-		t.texts = append(t.texts, buf.Bytes())
+		t.size += uint32(ni)
+		t.texts = append(t.texts, segment{
+			bytes: buf.Bytes(),
+			size:  ni,
+			crc:   crc32.ChecksumIEEE(si),
+		})
 		if n < 0 {
 			break
 		}
@@ -178,13 +213,29 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 		return int64(ni), err
 	}
 
-	zw := &typeZeroWriter{w: w}
+	ni, err := w.Write(t.gzipHdr[:])
+	nn += int64(ni)
+	if err != nil {
+		return nn, err
+	}
+
+	zw := &typeZeroWriter{
+		w: w,
+
+		size: t.size,
+		crc:  t.texts[0].crc,
+	}
 
 	for i := 0; i < n; i++ {
-		ni, err := w.Write(t.texts[i])
+		ti := &t.texts[i]
+
+		ni, err := w.Write(ti.bytes)
 		nn += int64(ni)
 		if err != nil {
 			return nn, err
+		}
+		if i > 0 {
+			zw.crc = hashmerge.CombineCRC32(crc32.IEEE, zw.crc, ti.crc, int64(ti.size))
 		}
 
 		ni, err = f(zw, t.tags[i])
@@ -193,7 +244,21 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 			return nn, err
 		}
 	}
-	ni, err := w.Write(t.texts[n])
+
+	tn := &t.texts[n]
+
+	ni, err = w.Write(tn.bytes)
+	nn += int64(ni)
+	if err != nil {
+		return nn, err
+	}
+	digest := hashmerge.CombineCRC32(crc32.IEEE, zw.crc, tn.crc, int64(tn.size))
+
+	var buf [8]byte
+	binary.LittleEndian.PutUint32(buf[:4], digest)
+	binary.LittleEndian.PutUint32(buf[4:], zw.size)
+
+	ni, err = w.Write(buf[:])
 	nn += int64(ni)
 	return nn, err
 }
@@ -255,6 +320,9 @@ func stdTagFunc(w io.Writer, tag string, m map[string]interface{}) (int, error) 
 type typeZeroWriter struct {
 	w io.Writer
 
+	size uint32
+	crc  uint32
+
 	hdrBuf [5]byte
 }
 
@@ -272,6 +340,9 @@ func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
 			return n, nil
 		}
 	}
+
+	w.size += uint32(len(p))
+	w.crc = crc32.Update(w.crc, crc32.IEEETable, p)
 
 	/* The following code is equivalent to:
 	 *  hbw := newHuffmanBitWriter(w.w)
