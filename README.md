@@ -1,6 +1,8 @@
 gziptemplate
 ============
 
+[![Build Status](https://travis-ci.com/tmthrgd/gziptemplate.svg?token=zvBahcneBzztKy9scr2f&branch=master)](https://travis-ci.com/tmthrgd/gziptemplate)
+
 Simple and fast gzipped template engine for Go.
 
 Take a look at [quicktemplate](https://github.com/valyala/quicktemplate) if you  need fast yet powerful html template engine.
