@@ -15,8 +15,6 @@ import (
 	"hash/crc32"
 	"io"
 	"strings"
-
-	"github.com/dsnet/golib/hashmerge"
 )
 
 // zero-length type 0 block
@@ -204,6 +202,8 @@ func (t *Template) Reset(template, startTag, endTag string, level int) error {
 	return nil
 }
 
+var crc32Mat = precomputeCRC32(crc32.IEEE)
+
 // ExecuteFunc calls f on each template tag (placeholder) occurrence.
 //
 // Returns the number of bytes written to w.
@@ -238,7 +238,7 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 			return nn, err
 		}
 		if i > 0 {
-			zw.crc = hashmerge.CombineCRC32(crc32.IEEE, zw.crc, ti.crc, int64(ti.size))
+			zw.crc = combineCRC32(crc32Mat, zw.crc, ti.crc, int64(ti.size))
 		}
 
 		zw.wrote = false
@@ -265,7 +265,7 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 	if err != nil {
 		return nn, err
 	}
-	digest := hashmerge.CombineCRC32(crc32.IEEE, zw.crc, tn.crc, int64(tn.size))
+	digest := combineCRC32(crc32Mat, zw.crc, tn.crc, int64(tn.size))
 
 	var buf [8]byte
 	binary.LittleEndian.PutUint32(buf[:4], digest)
