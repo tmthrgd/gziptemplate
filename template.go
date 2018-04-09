@@ -224,7 +224,9 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 			zw.crc = combineCRC32(crc32Mat, zw.crc, ti.crc, int64(ti.size))
 		}
 
-		zw.wrote = false
+		// typeZeroWriter clears hdrBuf[0] in Write, we use that
+		// as a sentinel.
+		zw.hdrBuf[0] = ^byte(0)
 
 		ni, err = f(zw, t.tags[i])
 		nn += int64(ni)
@@ -232,7 +234,7 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 			return nn, err
 		}
 
-		if !zw.wrote {
+		if zw.hdrBuf[0] != 0 {
 			ni, err := w.Write(syncFlushFooter)
 			nn += int64(ni)
 			if err != nil {
@@ -320,13 +322,9 @@ type typeZeroWriter struct {
 	crc  uint32
 
 	hdrBuf [5]byte
-
-	wrote bool
 }
 
 func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
-	w.wrote = true
-
 	const maxLength = ^uint16(0)
 	for len(p) > int(maxLength) {
 		ni, err := w.Write(p[:maxLength])
