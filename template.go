@@ -252,11 +252,10 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 	}
 	digest := combineCRC32(crc32Mat, zw.crc, tn.crc, int64(tn.size))
 
-	var buf [8]byte
-	binary.LittleEndian.PutUint32(buf[:4], digest)
-	binary.LittleEndian.PutUint32(buf[4:], zw.size)
+	binary.LittleEndian.PutUint32(zw.hdrBuf[:4], digest)
+	binary.LittleEndian.PutUint32(zw.hdrBuf[4:], zw.size)
 
-	ni, err = w.Write(buf[:])
+	ni, err = w.Write(zw.hdrBuf[:])
 	nn += int64(ni)
 	return nn, err
 }
@@ -321,7 +320,7 @@ type typeZeroWriter struct {
 	size uint32
 	crc  uint32
 
-	hdrBuf [5]byte
+	hdrBuf [8]byte
 }
 
 func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
@@ -354,7 +353,7 @@ func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
 	binary.LittleEndian.PutUint16(w.hdrBuf[1:], uint16(len(p)))
 	binary.LittleEndian.PutUint16(w.hdrBuf[3:], ^uint16(len(p)))
 
-	if _, err = w.w.Write(w.hdrBuf[:]); err != nil {
+	if _, err = w.w.Write(w.hdrBuf[:5]); err != nil {
 		return
 	}
 

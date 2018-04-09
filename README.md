@@ -27,11 +27,11 @@ BenchmarkTextTemplate-8                           200000             10689 ns/op
 BenchmarkFastTemplateExecuteFunc-8                200000              9091 ns/op              32 B/op          0 allocs/op
 BenchmarkFastTemplateExecute-8                    200000              9195 ns/op              48 B/op          1 allocs/op
 BenchmarkFastTemplateExecuteTagFunc-8             200000              9494 ns/op             192 B/op          4 allocs/op
-BenchmarkGzipTemplateExecuteFunc-8               5000000               302 ns/op              40 B/op          2 allocs/op
-BenchmarkGzipTemplateExecute-8                   5000000               323 ns/op              56 B/op          3 allocs/op
-BenchmarkGzipTemplateExecuteFuncBytes-8          3000000               483 ns/op             584 B/op          5 allocs/op
-BenchmarkGzipTemplateExecuteBytes-8              3000000               493 ns/op             584 B/op          5 allocs/op
-BenchmarkGzipTemplateExecuteTagFunc-8            3000000               441 ns/op             200 B/op          6 allocs/op
+BenchmarkGzipTemplateExecuteFunc-8               5000000               284 ns/op              32 B/op          1 allocs/op
+BenchmarkGzipTemplateExecute-8                   5000000               303 ns/op              48 B/op          2 allocs/op
+BenchmarkGzipTemplateExecuteFuncBytes-8          3000000               460 ns/op             576 B/op          4 allocs/op
+BenchmarkGzipTemplateExecuteBytes-8              3000000               452 ns/op             576 B/op          4 allocs/op
+BenchmarkGzipTemplateExecuteTagFunc-8            3000000               411 ns/op             192 B/op          5 allocs/op
 ```
 
 
