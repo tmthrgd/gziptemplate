@@ -109,14 +109,14 @@ func precomputeCRC32(poly uint32) *crc32Matrix {
 // and the length of B:
 //	tab := crc32.MakeTable(poly)
 //	crc32.Checksum(AB, tab) == combineCRC32(precomputeCRC32(poly), crc32.Checksum(A, tab), crc32.Checksum(B, tab), len(B))
-func combineCRC32(mat *crc32Matrix, crc1, crc2 uint32, len2 int64) uint32 {
-	if len2 < 0 || len2>>48 != 0 {
+func combineCRC32(mat *crc32Matrix, crc1, crc2 uint32, len2 uint64) uint32 {
+	if len2>>48 != 0 {
 		panic("hashmerge: length out of range")
 	}
 
 	// Apply len2 zeros to crc1.
 	for n := 0; len2 != 0; {
-		nz := bits.TrailingZeros64(uint64(len2))
+		nz := bits.TrailingZeros64(len2)
 		n += nz + 1
 		crc1 = matrixMult(&mat[n-1], crc1)
 		len2 >>= uint(nz) + 1

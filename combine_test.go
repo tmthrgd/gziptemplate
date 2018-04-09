@@ -88,7 +88,7 @@ func TestCombineCRC32(t *testing.T) {
 		for _, i := range splits {
 			p1, p2 := []byte(g.in[:i]), []byte(g.in[i:])
 			in1, in2 := g.in[:i], g.in[i:]
-			len2 := int64(len(p2))
+			len2 := uint64(len(p2))
 			if got := combineCRC32(IEEMat, ChecksumIEEE(p1), ChecksumIEEE(p2), len2); got != g.ieee {
 				t.Errorf("combineCRC32(precomputeCRC32(IEEE), ChecksumIEEE(%q), ChecksumIEEE(%q), %d) = 0x%x, want 0x%x",
 					in1, in2, len2, got, g.ieee)
@@ -110,7 +110,7 @@ func TestCombineCRC32Long(t *testing.T) {
 
 	// This is a regression test for long values of len2.
 	for _, tc := range []struct {
-		len2   int64
+		len2   uint64
 		expect uint32
 	}{
 		{1 << 7, 0x6d331acc},

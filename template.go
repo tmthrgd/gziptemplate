@@ -221,7 +221,7 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 			return nn, err
 		}
 		if i > 0 {
-			zw.crc = combineCRC32(crc32Mat, zw.crc, ti.crc, int64(ti.size))
+			zw.crc = combineCRC32(crc32Mat, zw.crc, ti.crc, uint64(ti.size))
 		}
 
 		// typeZeroWriter clears buf[0] in Write, we use that as a sentinel.
@@ -249,7 +249,7 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 	if err != nil {
 		return nn, err
 	}
-	digest := combineCRC32(crc32Mat, zw.crc, tn.crc, int64(tn.size))
+	digest := combineCRC32(crc32Mat, zw.crc, tn.crc, uint64(tn.size))
 
 	binary.LittleEndian.PutUint32(zw.buf[:4], digest)
 	binary.LittleEndian.PutUint32(zw.buf[4:], zw.size)
