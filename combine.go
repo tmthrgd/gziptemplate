@@ -44,12 +44,22 @@ import "math/bits"
 // Translation of gf2_matrix_times from zlib.
 func matrixMult(mat *[32]uint32, vec uint32) uint32 {
 	var sum uint32
-	for n := 0; vec != 0; {
-		nz := bits.TrailingZeros32(vec)
-		n += nz + 1
-		sum ^= mat[n-1]
-		vec >>= uint(nz) + 1
+
+	for n := 0; n < len(mat); n, vec = n+4, vec>>4 {
+		if vec&(1<<0) != 0 {
+			sum ^= mat[n+0]
+		}
+		if vec&(1<<1) != 0 {
+			sum ^= mat[n+1]
+		}
+		if vec&(1<<2) != 0 {
+			sum ^= mat[n+2]
+		}
+		if vec&(1<<3) != 0 {
+			sum ^= mat[n+3]
+		}
 	}
+
 	return sum
 }
 
