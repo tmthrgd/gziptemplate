@@ -55,15 +55,26 @@ func TestCombineCRC32(t *testing.T) {
 		{0x8e0bb443, 0xdcded527, 0xd4575591, "How can you write a big system without C++?  -Paul Glick"},
 	}
 
+	var (
+		CastagnoliTable = crc32.MakeTable(crc32.Castagnoli)
+		KoopmanTable    = crc32.MakeTable(crc32.Koopman)
+	)
+
 	var ChecksumIEEE = func(data []byte) uint32 {
 		return crc32.ChecksumIEEE(data)
 	}
 	var ChecksumCastagnoli = func(data []byte) uint32 {
-		return crc32.Checksum(data, crc32.MakeTable(crc32.Castagnoli))
+		return crc32.Checksum(data, CastagnoliTable)
 	}
 	var ChecksumKoopman = func(data []byte) uint32 {
-		return crc32.Checksum(data, crc32.MakeTable(crc32.Koopman))
+		return crc32.Checksum(data, KoopmanTable)
 	}
+
+	var (
+		IEEMat        = precomputeCRC32(crc32.IEEE)
+		CastagnoliMat = precomputeCRC32(crc32.Castagnoli)
+		KoopmanMat    = precomputeCRC32(crc32.Koopman)
+	)
 
 	for _, g := range golden {
 		var splits = []int{
@@ -78,15 +89,15 @@ func TestCombineCRC32(t *testing.T) {
 			p1, p2 := []byte(g.in[:i]), []byte(g.in[i:])
 			in1, in2 := g.in[:i], g.in[i:]
 			len2 := int64(len(p2))
-			if got := combineCRC32(precomputeCRC32(crc32.IEEE), ChecksumIEEE(p1), ChecksumIEEE(p2), len2); got != g.ieee {
+			if got := combineCRC32(IEEMat, ChecksumIEEE(p1), ChecksumIEEE(p2), len2); got != g.ieee {
 				t.Errorf("combineCRC32(precomputeCRC32(IEEE), ChecksumIEEE(%q), ChecksumIEEE(%q), %d) = 0x%x, want 0x%x",
 					in1, in2, len2, got, g.ieee)
 			}
-			if got := combineCRC32(precomputeCRC32(crc32.Castagnoli), ChecksumCastagnoli(p1), ChecksumCastagnoli(p2), len2); got != g.castagnoli {
+			if got := combineCRC32(CastagnoliMat, ChecksumCastagnoli(p1), ChecksumCastagnoli(p2), len2); got != g.castagnoli {
 				t.Errorf("combineCRC32(precomputeCRC32(Castagnoli), ChecksumCastagnoli(%q), ChecksumCastagnoli(%q), %d) = 0x%x, want 0x%x",
 					in1, in2, len2, got, g.castagnoli)
 			}
-			if got := combineCRC32(precomputeCRC32(crc32.Koopman), ChecksumKoopman(p1), ChecksumKoopman(p2), len2); got != g.koopman {
+			if got := combineCRC32(KoopmanMat, ChecksumKoopman(p1), ChecksumKoopman(p2), len2); got != g.koopman {
 				t.Errorf("combineCRC32(precomputeCRC32(Koopman), ChecksumKoopman(%q), ChecksumKoopman(%q), %d) = 0x%x, want 0x%x",
 					in1, in2, len2, got, g.koopman)
 			}
