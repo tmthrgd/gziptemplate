@@ -224,9 +224,8 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 			zw.crc = combineCRC32(crc32Mat, zw.crc, ti.crc, int64(ti.size))
 		}
 
-		// typeZeroWriter clears hdrBuf[0] in Write, we use that
-		// as a sentinel.
-		zw.hdrBuf[0] = ^byte(0)
+		// typeZeroWriter clears buf[0] in Write, we use that as a sentinel.
+		zw.buf[0] = ^byte(0)
 
 		ni, err = f(zw, t.tags[i])
 		nn += int64(ni)
@@ -234,7 +233,7 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 			return nn, err
 		}
 
-		if zw.hdrBuf[0] != 0 {
+		if zw.buf[0] != 0 {
 			ni, err := w.Write(syncFlushFooter)
 			nn += int64(ni)
 			if err != nil {
@@ -252,10 +251,10 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 	}
 	digest := combineCRC32(crc32Mat, zw.crc, tn.crc, int64(tn.size))
 
-	binary.LittleEndian.PutUint32(zw.hdrBuf[:4], digest)
-	binary.LittleEndian.PutUint32(zw.hdrBuf[4:], zw.size)
+	binary.LittleEndian.PutUint32(zw.buf[:4], digest)
+	binary.LittleEndian.PutUint32(zw.buf[4:], zw.size)
 
-	ni, err = w.Write(zw.hdrBuf[:])
+	ni, err = w.Write(zw.buf[:])
 	nn += int64(ni)
 	return nn, err
 }
@@ -320,7 +319,7 @@ type typeZeroWriter struct {
 	size uint32
 	crc  uint32
 
-	hdrBuf [8]byte
+	buf [8]byte
 }
 
 func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
@@ -349,11 +348,11 @@ func (w *typeZeroWriter) Write(p []byte) (n int, err error) {
 	 *  return len(p), hbw.err
 	 */
 
-	w.hdrBuf[0] = 0
-	binary.LittleEndian.PutUint16(w.hdrBuf[1:], uint16(len(p)))
-	binary.LittleEndian.PutUint16(w.hdrBuf[3:], ^uint16(len(p)))
+	w.buf[0] = 0
+	binary.LittleEndian.PutUint16(w.buf[1:], uint16(len(p)))
+	binary.LittleEndian.PutUint16(w.buf[3:], ^uint16(len(p)))
 
-	if _, err = w.w.Write(w.hdrBuf[:5]); err != nil {
+	if _, err = w.w.Write(w.buf[:5]); err != nil {
 		return
 	}
 
