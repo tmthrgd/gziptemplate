@@ -60,9 +60,7 @@ func matrixSquare(square, mat *[32]uint32) {
 	}
 }
 
-type crc32Matrix struct {
-	matrices [64][32]uint32
-}
+type crc32Matrix [64][32]uint32
 
 func precomputeCRC32(poly uint32) *crc32Matrix {
 	// Even and odd power-of-two zeros operators.
@@ -84,12 +82,12 @@ func precomputeCRC32(poly uint32) *crc32Matrix {
 
 	mat := new(crc32Matrix)
 
-	for i := 0; i < len(mat.matrices); i += 2 {
+	for i := 0; i < len(mat); i += 2 {
 		matrixSquare(&even, &odd)
-		mat.matrices[i+0] = even
+		mat[i+0] = even
 
 		matrixSquare(&odd, &even)
-		mat.matrices[i+1] = odd
+		mat[i+1] = odd
 	}
 
 	return mat
@@ -110,7 +108,7 @@ func combineCRC32(mat *crc32Matrix, crc1, crc2 uint32, len2 int64) uint32 {
 	for n := 0; len2 != 0; {
 		nz := bits.TrailingZeros64(uint64(len2))
 		n += nz + 1
-		crc1 = matrixMult(&mat.matrices[n-1], crc1)
+		crc1 = matrixMult(&mat[n-1], crc1)
 		len2 >>= uint(nz) + 1
 	}
 
