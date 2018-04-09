@@ -118,8 +118,6 @@ func TestCombineCRC32Long(t *testing.T) {
 		{1 << 31, 0xa360d9f3},
 		{1 << 39, 0x6d331acc},
 		{1 << 47, 0x4c8ded7f},
-		{1 << 51, 0x203c6b5c},
-		{1 << 62, 0xbff85d0a},
 	} {
 		if got := combineCRC32(mat, 0xdeadbeef, 0x1337f001, tc.len2); got != tc.expect {
 			t.Errorf("combineCRC32(precomputeCRC32(Koopman), 0xdeadbeef, 0x1337f001, %d) = 0x%x, want 0x%x",
