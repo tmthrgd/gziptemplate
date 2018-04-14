@@ -70,6 +70,13 @@ func New(template, startTag, endTag string, level int) *Template {
 // The returned template can be executed by concurrently running goroutines
 // using Execute* methods.
 func NewTemplate(template, startTag, endTag string, level int) (*Template, error) {
+	if len(startTag) == 0 {
+		panic("startTag cannot be empty")
+	}
+	if len(endTag) == 0 {
+		panic("endTag cannot be empty")
+	}
+
 	var t Template
 
 	const (
@@ -86,13 +93,6 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 		t.gzipHdr[8] = 2
 	} else if level == BestSpeed {
 		t.gzipHdr[8] = 4
-	}
-
-	if len(startTag) == 0 {
-		panic("startTag cannot be empty")
-	}
-	if len(endTag) == 0 {
-		panic("endTag cannot be empty")
 	}
 
 	tagsCount := strings.Count(template, startTag)
