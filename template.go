@@ -71,10 +71,10 @@ func New(template, startTag, endTag string, level int) *Template {
 // using Execute* methods.
 func NewTemplate(template, startTag, endTag string, level int) (*Template, error) {
 	if len(startTag) == 0 {
-		panic("startTag cannot be empty")
+		panic("gziptemplate: startTag cannot be empty")
 	}
 	if len(endTag) == 0 {
-		panic("endTag cannot be empty")
+		panic("gziptemplate: endTag cannot be empty")
 	}
 
 	var t Template
@@ -165,7 +165,7 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 
 		n = strings.Index(st, endTag)
 		if n < 0 {
-			return nil, fmt.Errorf("Cannot find end tag=%q in the template=%q starting from %q", endTag, template, st)
+			return nil, fmt.Errorf("gziptemplate: missing end tag=%q in template=%q starting from %q", endTag, template, st)
 		}
 
 		t.tags = append(t.tags, st[:n])
@@ -280,7 +280,7 @@ func (t *Template) ExecuteFuncBytes(f TagFunc) []byte {
 	var buf bytes.Buffer
 	buf.Grow(len(t.template))
 	if _, err := t.ExecuteFunc(&buf, f); err != nil {
-		panic(fmt.Sprintf("unexpected error: %s", err))
+		panic(fmt.Sprintf("gziptemplate: unexpected error: %s", err))
 	}
 	return buf.Bytes()
 }
@@ -309,7 +309,7 @@ func stdTagFunc(w io.Writer, tag string, m map[string]interface{}) (int, error) 
 	case TagFunc:
 		return value(w, tag)
 	default:
-		panic(fmt.Sprintf("tag=%q contains unexpected value type=%#v. Expected []byte, string or TagFunc", tag, v))
+		panic(fmt.Sprintf("gziptemplate: tag=%q contains unexpected value type=%#v", tag, v))
 	}
 }
 
