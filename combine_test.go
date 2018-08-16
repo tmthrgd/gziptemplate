@@ -125,3 +125,13 @@ func TestCombineCRC32Long(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkPrecomputeCRC32(b *testing.B) {
+	var mat *crc32Matrix
+
+	for n := 0; n < b.N; n++ {
+		mat = precomputeCRC32(crc32.IEEE)
+	}
+
+	_ = mat
+}
