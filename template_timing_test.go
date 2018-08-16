@@ -84,7 +84,7 @@ func BenchmarkFastTemplateExecuteFunc(b *testing.B) {
 		gw, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
 		for pb.Next() {
 			gw.Reset(ioutil.Discard)
-			if _, err := t.ExecuteFunc(gw, testTagFunc); err != nil {
+			if err := t.ExecuteFunc(gw, testTagFunc); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
 			gw.Close()
@@ -103,7 +103,7 @@ func BenchmarkFastTemplateExecute(b *testing.B) {
 		gw, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
 		for pb.Next() {
 			gw.Reset(ioutil.Discard)
-			if _, err := t.Execute(gw, m); err != nil {
+			if err := t.Execute(gw, m); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
 			gw.Close()
@@ -121,7 +121,10 @@ func BenchmarkFastTemplateExecuteTagFunc(b *testing.B) {
 	for k, v := range m {
 		if k == "ref" {
 			vv := v.([]byte)
-			v = fasttemplate.TagFunc(func(w io.Writer, tag string) (int, error) { return w.Write([]byte(url.QueryEscape(string(vv)))) })
+			v = fasttemplate.TagFunc(func(w io.Writer, tag string) error {
+				_, err := io.WriteString(w, url.QueryEscape(string(vv)))
+				return err
+			})
 		}
 		mm[k] = v
 	}
@@ -131,7 +134,7 @@ func BenchmarkFastTemplateExecuteTagFunc(b *testing.B) {
 		gw, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestCompression)
 		for pb.Next() {
 			gw.Reset(ioutil.Discard)
-			if _, err := t.Execute(gw, mm); err != nil {
+			if err := t.Execute(gw, mm); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
 			gw.Close()
@@ -148,7 +151,7 @@ func BenchmarkGzipTemplateExecuteFunc(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if _, err := t.ExecuteFunc(ioutil.Discard, testTagFunc); err != nil {
+			if err := t.ExecuteFunc(ioutil.Discard, testTagFunc); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
 		}
@@ -164,7 +167,7 @@ func BenchmarkGzipTemplateExecute(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if _, err := t.Execute(ioutil.Discard, m); err != nil {
+			if err := t.Execute(ioutil.Discard, m); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
 		}
@@ -209,7 +212,10 @@ func BenchmarkGzipTemplateExecuteTagFunc(b *testing.B) {
 	for k, v := range m {
 		if k == "ref" {
 			vv := v.([]byte)
-			v = TagFunc(func(w io.Writer, tag string) (int, error) { return w.Write([]byte(url.QueryEscape(string(vv)))) })
+			v = TagFunc(func(w io.Writer, tag string) error {
+				_, err := io.WriteString(w, url.QueryEscape(string(vv)))
+				return err
+			})
 		}
 		mm[k] = v
 	}
@@ -217,7 +223,7 @@ func BenchmarkGzipTemplateExecuteTagFunc(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if _, err := t.Execute(ioutil.Discard, mm); err != nil {
+			if err := t.Execute(ioutil.Discard, mm); err != nil {
 				b.Fatalf("unexpected error: %s", err)
 			}
 		}
@@ -232,6 +238,7 @@ func BenchmarkNewTemplate(b *testing.B) {
 	})
 }
 
-func testTagFunc(w io.Writer, tag string) (int, error) {
-	return w.Write(m[tag].([]byte))
+func testTagFunc(w io.Writer, tag string) error {
+	_, err := w.Write(m[tag].([]byte))
+	return err
 }

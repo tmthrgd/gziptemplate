@@ -180,29 +180,24 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 // TagFunc can be used as a substitution value in the map passed to Execute*.
 // Execute* functions pass tag (placeholder) name in 'tag' argument.
 //
-// TagFunc must be safe to call from concurrently running goroutines.
-//
-// TagFunc must write contents to w and return the number of bytes written.
-type TagFunc func(w io.Writer, tag string) (int, error)
+// TagFunc must write contents to w and be safe to call from concurrently
+// running goroutines.
+type TagFunc func(w io.Writer, tag string) error
 
 var crc32Mat = precomputeCRC32(crc32.IEEE)
 
 // ExecuteFunc calls f on each template tag (placeholder) occurrence.
 //
 // Returns the number of bytes written to w.
-func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
-	var nn int64
-
+func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) error {
 	n := len(t.texts) - 1
 	if n == -1 {
-		ni, err := w.Write(t.template)
-		return int64(ni), err
+		_, err := w.Write(t.template)
+		return err
 	}
 
-	ni, err := w.Write(t.gzipHdr[:])
-	nn += int64(ni)
-	if err != nil {
-		return nn, err
+	if _, err := w.Write(t.gzipHdr[:]); err != nil {
+		return err
 	}
 
 	zw := &typeZeroWriter{
@@ -215,10 +210,8 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 	for i := 0; i < n; i++ {
 		ti := &t.texts[i]
 
-		ni, err := w.Write(ti.bytes)
-		nn += int64(ni)
-		if err != nil {
-			return nn, err
+		if _, err := w.Write(ti.bytes); err != nil {
+			return err
 		}
 		if i > 0 {
 			zw.crc = combineCRC32(crc32Mat, zw.crc, ti.crc, uint64(ti.size))
@@ -227,36 +220,29 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 		// typeZeroWriter clears buf[0] in Write, we use that as a sentinel.
 		zw.buf[0] = ^byte(0)
 
-		ni, err = f(zw, t.tags[i])
-		nn += int64(ni)
-		if err != nil {
-			return nn, err
+		if err := f(zw, t.tags[i]); err != nil {
+			return err
 		}
 
 		if zw.buf[0] != 0 {
-			ni, err := w.Write(syncFlushFooter)
-			nn += int64(ni)
-			if err != nil {
-				return nn, err
+			if _, err := w.Write(syncFlushFooter); err != nil {
+				return err
 			}
 		}
 	}
 
 	tn := &t.texts[n]
 
-	ni, err = w.Write(tn.bytes)
-	nn += int64(ni)
-	if err != nil {
-		return nn, err
+	if _, err := w.Write(tn.bytes); err != nil {
+		return err
 	}
 	digest := combineCRC32(crc32Mat, zw.crc, tn.crc, uint64(tn.size))
 
 	binary.LittleEndian.PutUint32(zw.buf[:4], digest)
 	binary.LittleEndian.PutUint32(zw.buf[4:], zw.size)
 
-	ni, err = w.Write(zw.buf[:])
-	nn += int64(ni)
-	return nn, err
+	_, err := w.Write(zw.buf[:])
+	return err
 }
 
 // Execute substitutes template tags (placeholders) with the corresponding
@@ -266,10 +252,10 @@ func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) (int64, error) {
 //   * []byte - the fastest value type
 //   * string - convenient value type
 //   * TagFunc - flexible value type
-//
-// Returns the number of bytes written to w.
-func (t *Template) Execute(w io.Writer, m map[string]interface{}) (int64, error) {
-	return t.ExecuteFunc(w, func(w io.Writer, tag string) (int, error) { return stdTagFunc(w, tag, m) })
+func (t *Template) Execute(w io.Writer, m map[string]interface{}) error {
+	return t.ExecuteFunc(w, func(w io.Writer, tag string) error {
+		return stdTagFunc(w, tag, m)
+	})
 }
 
 // ExecuteFuncBytes calls f on each template tag (placeholder) occurrence
@@ -279,7 +265,7 @@ func (t *Template) Execute(w io.Writer, m map[string]interface{}) (int64, error)
 func (t *Template) ExecuteFuncBytes(f TagFunc) []byte {
 	var buf bytes.Buffer
 	buf.Grow(len(t.template))
-	if _, err := t.ExecuteFunc(&buf, f); err != nil {
+	if err := t.ExecuteFunc(&buf, f); err != nil {
 		panic(fmt.Sprintf("gziptemplate: unexpected error: %s", err))
 	}
 	return buf.Bytes()
@@ -293,19 +279,23 @@ func (t *Template) ExecuteFuncBytes(f TagFunc) []byte {
 //   * string - convenient value type
 //   * TagFunc - flexible value type
 func (t *Template) ExecuteBytes(m map[string]interface{}) []byte {
-	return t.ExecuteFuncBytes(func(w io.Writer, tag string) (int, error) { return stdTagFunc(w, tag, m) })
+	return t.ExecuteFuncBytes(func(w io.Writer, tag string) error {
+		return stdTagFunc(w, tag, m)
+	})
 }
 
-func stdTagFunc(w io.Writer, tag string, m map[string]interface{}) (int, error) {
+func stdTagFunc(w io.Writer, tag string, m map[string]interface{}) error {
 	v := m[tag]
 	if v == nil {
-		return 0, nil
+		return nil
 	}
 	switch value := v.(type) {
 	case []byte:
-		return w.Write(value)
+		_, err := w.Write(value)
+		return err
 	case string:
-		return w.Write([]byte(value))
+		_, err := w.Write([]byte(value))
+		return err
 	case TagFunc:
 		return value(w, tag)
 	default:

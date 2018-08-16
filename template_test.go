@@ -216,7 +216,10 @@ func TestMixedValues(t *testing.T) {
 	s := tpl.ExecuteBytes(map[string]interface{}{
 		"foo": "111",
 		"bar": []byte("bbb"),
-		"baz": TagFunc(func(w io.Writer, tag string) (int, error) { return w.Write([]byte(tag)) }),
+		"baz": TagFunc(func(w io.Writer, tag string) error {
+			_, err := io.WriteString(w, tag)
+			return err
+		}),
 	})
 	s = decompressBytes(t, s)
 	result := "foo111barbbbbazbaz"
