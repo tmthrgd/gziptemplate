@@ -9,14 +9,6 @@ import (
 	"testing"
 )
 
-// shortString truncates long strings into something more human readable.
-func shortString(s string) string {
-	if len(s) > 220 {
-		s = s[:100] + "..." + s[len(s)-100:]
-	}
-	return s
-}
-
 func TestCombineCRC32(t *testing.T) {
 	var golden = []struct {
 		ieee, castagnoli, koopman uint32
