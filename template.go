@@ -187,8 +187,6 @@ type TagFunc func(w io.Writer, tag string) error
 var crc32Mat = precomputeCRC32(crc32.IEEE)
 
 // ExecuteFunc calls f on each template tag (placeholder) occurrence.
-//
-// Returns the number of bytes written to w.
 func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) error {
 	n := len(t.texts) - 1
 	if n == -1 {
