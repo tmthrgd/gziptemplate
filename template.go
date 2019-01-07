@@ -144,36 +144,27 @@ func NewTemplate(template, startTag, endTag string, level int) (*Template, error
 // running goroutines.
 type TagFunc func(w io.Writer, tag string) error
 
-func (t *Template) executeFuncBytes(f TagFunc) ([]byte, error) {
-	n := len(t.texts) - 1
-	if n == -1 {
-		return t.template, nil
-	}
-
-	b := gzipbuilder.NewBuilder(t.level)
-	uw := b.UncompressedWriter()
-
-	for i := 0; i < n; i++ {
-		b.AddPrecompressedData(t.texts[i])
-
-		if err := f(uw, t.tags[i]); err != nil {
-			return nil, err
-		}
-	}
-
-	b.AddPrecompressedData(t.texts[n])
-	return b.Bytes()
-}
-
 // ExecuteFunc calls f on each template tag (placeholder) occurrence.
 func (t *Template) ExecuteFunc(w io.Writer, f TagFunc) error {
-	b, err := t.executeFuncBytes(f)
-	if err != nil {
+	n := len(t.texts) - 1
+	if n == -1 {
+		_, err := w.Write(t.template)
 		return err
 	}
 
-	_, err = w.Write(b)
-	return err
+	gw := gzipbuilder.NewWriter(w, t.level)
+	uw := gw.UncompressedWriter()
+
+	for i := 0; i < n; i++ {
+		gw.AddPrecompressedData(t.texts[i])
+
+		if err := f(uw, t.tags[i]); err != nil {
+			return err
+		}
+	}
+
+	gw.AddPrecompressedData(t.texts[n])
+	return gw.Close()
 }
 
 // Execute substitutes template tags (placeholders) with the corresponding
@@ -194,11 +185,24 @@ func (t *Template) Execute(w io.Writer, m map[string]interface{}) error {
 //
 // Returns the resulting byte slice.
 func (t *Template) ExecuteFuncBytes(f TagFunc) []byte {
-	b, err := t.executeFuncBytes(f)
-	if err != nil {
-		panic(fmt.Sprintf("gziptemplate: unexpected error: %s", err))
+	n := len(t.texts) - 1
+	if n == -1 {
+		return append([]byte(nil), t.template...)
 	}
-	return b
+
+	b := gzipbuilder.NewBuilder(t.level)
+	uw := b.UncompressedWriter()
+
+	for i := 0; i < n; i++ {
+		b.AddPrecompressedData(t.texts[i])
+
+		if err := f(uw, t.tags[i]); err != nil {
+			panic(fmt.Sprintf("gziptemplate: unexpected error from TagFunc: %s", err))
+		}
+	}
+
+	b.AddPrecompressedData(t.texts[n])
+	return b.BytesOrPanic()
 }
 
 // ExecuteBytes substitutes template tags (placeholders) with the corresponding
