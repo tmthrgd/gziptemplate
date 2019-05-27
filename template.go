@@ -15,7 +15,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/tmthrgd/gzipbuilder"
+	"tmthrgd.dev/go/gzipbuilder"
 )
 
 // These constants are copied from the flate package, so that code that imports
