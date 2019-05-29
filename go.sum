@@ -7,5 +7,5 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/tmthrgd/fasttemplate v0.0.0-20190303111627-606b8ff2d0e2 h1:k1yoiCoamVmXbKdkkmKHRWG6edTNaXekuwgD4g4Lw7U=
 github.com/tmthrgd/fasttemplate v0.0.0-20190303111627-606b8ff2d0e2/go.mod h1:UnE8sCUAqpLJLFIGtiUeZ52/7MAtEZ+/U9FL/1sx2EI=
-tmthrgd.dev/go/gzipbuilder v0.0.0-20190527002412-123a0434cc8b h1:5T6OK/NqxN4zRTXA2hu1SdoEfvkdu3CJNfgmMFIIwSw=
-tmthrgd.dev/go/gzipbuilder v0.0.0-20190527002412-123a0434cc8b/go.mod h1:jUoxc91/Pe+NwOgRXGl/4mA1MFY+eIV9xfaqVaowNNg=
+go.tmthrgd.dev/gzipbuilder v0.0.0-20190529071130-cb3494389c2b h1:r8NgOYM/K8+RVArNopNBwujYBk/22Y7NO/Qsr5lhzUg=
+go.tmthrgd.dev/gzipbuilder v0.0.0-20190529071130-cb3494389c2b/go.mod h1:VAdz1UNfDsF7eA/KjZaCCbp4Gy+nibNdsBbC8PkdcXU=

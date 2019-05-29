@@ -1,8 +1,8 @@
-module tmthrgd.dev/go/gziptemplate
+module go.tmthrgd.dev/gziptemplate
 
 go 1.12
 
 require (
 	github.com/tmthrgd/fasttemplate v0.0.0-20190303111627-606b8ff2d0e2
-	tmthrgd.dev/go/gzipbuilder v0.0.0-20190527002412-123a0434cc8b
+	go.tmthrgd.dev/gzipbuilder v0.0.0-20190529071130-cb3494389c2b
 )
